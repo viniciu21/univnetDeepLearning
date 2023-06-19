@@ -6,6 +6,39 @@ from .lvcnet import LVCBlock
 
 MAX_WAV_VALUE = 32768.0
 
+class UpSampler(nn.Module):
+    def __init__(self):
+        super(UpSampler, self).__init__()
+        
+        self.embedding_dim = 1024  # Dimensionality of the embedding
+        self.vocab_size = 8194  # Total number of unique numbers in the input array
+        
+        self.emb_layer = torch.nn.Embedding(self.vocab_size, self.embedding_dim)
+        
+        self.upsample_factor = 2  # Upsampling factor for the sequence length
+        
+        self.in_channels = self.embedding_dim  # Number of input channels (equal to embedding_dim)
+        self.out_channels = self.embedding_dim  # Number of output channels (equal to embedding_dim)
+        self.kernel_size = self.upsample_factor * 2  # Size of the transposed convolution kernel
+        
+        self.upsampler = torch.nn.ConvTranspose1d(self.in_channels, self.out_channels, self.kernel_size, stride=self.upsample_factor);
+
+        self.upsampler.weight.requires_grad = False; 
+        self.upsamplerp2 = torch.nn.ConvTranspose1d(self.in_channels, self.out_channels, self.kernel_size, stride=self.upsample_factor);
+
+    def upsample_it(self, codes):
+        upsamplerEmbeddings = self.upsampler(codes.permute(0, 2, 1))
+        upsamplerEmbeddings = upsamplerEmbeddings.permute(0, 2, 1)
+
+        upsamplerEmbeddingsp2 = self.upsampler(upsamplerEmbeddings.permute(0, 2, 1))
+
+        upsamplerEmbeddingsp2 = upsamplerEmbeddingsp2.permute(0, 2, 1)
+
+        print(upsamplerEmbeddingsp2.shape)
+
+        return upsamplerEmbeddingsp2
+
+
 class Generator(nn.Module):
     """UnivNet Generator"""
     def __init__(self, hp):
@@ -49,7 +82,7 @@ class Generator(nn.Module):
         
         '''
         z = self.conv_pre(z)                # (B, c_g, L)
-
+        z = UpSampler().upsample_it(z)
         for res_block in self.res_stack:
             res_block.to(z.device)
             z = res_block(z, c)             # (B, c_g, L * s_0 * ... * s_i)
