@@ -2,7 +2,6 @@
 .idea/
 
 # configuration
-config/*
 !config/default.yaml
 temp-restore.yaml
 
