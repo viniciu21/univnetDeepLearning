@@ -13,6 +13,9 @@ logs/
 # just a temporary folder
 temp/
 
+**/test
+**/train
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

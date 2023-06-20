@@ -13,6 +13,30 @@ class Upsampler(nn.Module):
 
 
     def forward(self, x):
+        # Código para processar os embeddings colocar dentro do for para iterar todos os arquivos
+        embedding_dim = 1024  # Dimensionality of the embedding
+        vocab_size = 8194  # Total number of unique numbers in the input array
+        emb_layer = torch.nn.Embedding(vocab_size, embedding_dim)
+
+        in_channels = embedding_dim  # Number of input channels (equal to embedding_dim)
+        kernel_size = 2  # Size of the transposed convolution kernel
+
+        upsampler = torch.nn.ConvTranspose1d(in_channels, 200, kernel_size, stride=2);
+
+        #upsampler.weight.requires_grad = False; 
+        upsamplerp2 = torch.nn.ConvTranspose1d(200, 100, kernel_size, stride=2);
+
+        upsampler_code = []
+
+        for code in x: 
+            if(len(code.shape) > 2):
+                print(f"{code.shape}-pulando code, formato estranho");
+                continue;
+            
+            embeddings = emb_layer(code)
+            upsamplerp1 = upsampler(embeddings.permute(0, 2, 1))
+            upsamplerparte2 = upsamplerp2(upsamplerp1)
+            upsampler_code.append(upsamplerparte2.permute(0, 2, 1))
 
         return x
 
