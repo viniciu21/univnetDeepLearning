@@ -67,7 +67,7 @@ class MelFromDisk(Dataset):
 
     def my_getitem(self, idx):
         basename, _, _ = self.meta[idx]
-        wavpath = os.path.join(self.data_dir, 'audio', basename+'.wav')
+        wavpath = os.path.join(self.data_dir, basename+'.wav')
         sr, audio = read_wav_np(wavpath)
 
         if len(audio) < self.hp.audio.segment_length + self.hp.audio.pad_short:
@@ -75,7 +75,7 @@ class MelFromDisk(Dataset):
                     mode='constant', constant_values=0.0)
 
         audio = torch.from_numpy(audio).unsqueeze(0)
-        codepath = os.path.join(self.data_dir, 'codes', basename+'.pth')
+        codepath = os.path.join(self.data_dir, basename+'.pth')
         code = torch.load(codepath, map_location='cpu')
 
         nframes_codes = code.size(1)
@@ -127,10 +127,11 @@ class MelFromDisk(Dataset):
         return mel
 
     def load_metadata(self, path, split="|"):
+        print(path)
         metadata = []
         with open(path, 'r', encoding='utf-8') as f:
             for line in f:
                 stripped = line.strip().split(split)
                 metadata.append(stripped)
-
+       
         return metadata

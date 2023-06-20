@@ -1,8 +1,8 @@
 data:
-  train_dir: 'smt_propor2022/' # root path of train data (either relative/absoulte path is ok)
-  train_meta: 'smt_propor2022_shuffled_train_train.tsv'  # relative path of metadata file from train_dir
-  val_dir: 'smt_propor2022/' # root path of validation data
-  val_meta: 'smt_propor2022_shuffled_train_val.tsv'  # relative path of metadata file from val_dir
+  train_dir: 'C:\Users\Pichau\www\Projects\univnetDeepLearning\datasets\train\' # root path of train data (either relative/absoulte path is ok)
+  train_meta: 'metadata\smt_propor2022_shuffled_train_train.tsv'  # relative path of metadata file from train_dir
+  val_dir: 'C:\Users\Pichau\www\Projects\univnetDeepLearning\datasets\train\' # root path of validation data
+  val_meta: 'metadata\smt_propor2022_shuffled_train_val.tsv'  # relative path of metadata file from val_dir
 #############################
 train:
   num_workers: 8

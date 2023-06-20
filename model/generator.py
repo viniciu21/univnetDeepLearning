@@ -12,33 +12,39 @@ class Upsampler(nn.Module):
         super(Upsampler, self).__init__()
 
 
-    def forward(self, x):
+    def forward(self, x, z):
+        #print(f"iniciando embeddeing com upsampler {x.shape}");
         # Código para processar os embeddings colocar dentro do for para iterar todos os arquivos
         embedding_dim = 1024  # Dimensionality of the embedding
         vocab_size = 8194  # Total number of unique numbers in the input array
-        emb_layer = torch.nn.Embedding(vocab_size, embedding_dim)
+        emb_layer = torch.nn.Embedding(vocab_size, embedding_dim).to(z.device)
 
         in_channels = embedding_dim  # Number of input channels (equal to embedding_dim)
         kernel_size = 2  # Size of the transposed convolution kernel
 
-        upsampler = torch.nn.ConvTranspose1d(in_channels, 200, kernel_size, stride=2);
+        upsampler = torch.nn.ConvTranspose1d(in_channels, 200, kernel_size, stride=2).to(z.device);
 
         #upsampler.weight.requires_grad = False; 
-        upsamplerp2 = torch.nn.ConvTranspose1d(200, 100, kernel_size, stride=2);
+        upsamplerp2 = torch.nn.ConvTranspose1d(200, 100, kernel_size, stride=2).to(z.device);
 
         upsampler_code = []
-
-        for code in x: 
-            if(len(code.shape) > 2):
-                print(f"{code.shape}-pulando code, formato estranho");
-                continue;
-            
-            embeddings = emb_layer(code)
-            upsamplerp1 = upsampler(embeddings.permute(0, 2, 1))
-            upsamplerparte2 = upsamplerp2(upsamplerp1)
-            upsampler_code.append(upsamplerparte2.permute(0, 2, 1))
-
-        return x
+        
+        embeddings = emb_layer(x)
+        #print(f"{embeddings.shape} P1")
+        upsamplerp1 = []
+        if(len(embeddings.shape) > 3): 
+            upsamplerp1 = upsampler(embeddings.squeeze(1).permute(0, 2, 1))
+        else: 
+            upsamplerp1 = upsampler(embeddings.squeeze(0).permute(0, 2, 1))
+        #print(f"{upsamplerp1.shape} P2")
+        
+        upsamplerparte2 = upsamplerp2(upsamplerp1)
+        #print(f"{upsamplerparte2.shape} P3")
+        
+        upsampler_code.append(upsamplerparte2)
+        return upsampler_code[0]
+        #print(upsampler_code)
+        
 
 
 class Generator(nn.Module):
@@ -88,10 +94,11 @@ class Generator(nn.Module):
             c (Tensor): the conditioning sequence of mel-spectrogram (batch, mel_channels, in_length) 
             z (Tensor): the noise sequence (batch, noise_dim, in_length)
         '''
-        c_emb = self.upsampler(c)
-
+        self.upsampler.to(z.device)
+        c_emb = self.upsampler(c, z)
+        
+        #print(f"{c_emb}")
         z = self.conv_pre(z)                # (B, c_g, L)
-
         for res_block in self.res_stack:
             res_block.to(z.device)
             z = res_block(z, c_emb)             # (B, c_g, L * s_0 * ... * s_i)
